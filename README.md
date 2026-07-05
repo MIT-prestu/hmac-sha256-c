@@ -1,4 +1,4 @@
-# 🔐 HMAC-SHA256 Implementation in Pure C
+# 🔐 Lightweight HMAC-SHA256 & SHA-256 Engine in Pure C
 
 [![Language](https://img.shields.io/badge/Language-C-blue.svg)](https://en.wikipedia.org/wiki/C_(programming_language))
 [![Standard](https://img.shields.io/badge/Compliance-RFC_2104-orange.svg)](https://tools.ietf.org/html/rfc2104)
@@ -10,25 +10,30 @@
 
 ## English
 
-A lightweight, high-performance, and dependency-free implementation of the **HMAC-SHA256** (Keyed-Hash Message Authentication Code) algorithm in pure C. This project includes both the underlying **SHA-256** hash engine and the **HMAC** authentication wrapper, strictly adhering to **RFC 2104** and **FIPS PUB 180-4** standards.
+A lightweight, standalone, and completely dependency-free cryptographic library implementing the **SHA-256** hash algorithm and the **HMAC-SHA256** (Keyed-Hash Message Authentication Code) wrapper in pure standard C. 
 
-### 🚀 Key Features
+This repository showcases a complete implementation from bitwise primitives up to application-level MAC tag generation, strictly compliant with **RFC 2104** and **FIPS PUB 180-4**.
 
-* **Zero Dependencies**: Pure standard C implementation. No external cryptography libraries (like OpenSSL) required. Extremely easy to cross-compile for embedded systems/MCUs.
-* **Rigorous Security & Buffer Safety**: Prevents memory leaks and buffer overruns. Implements explicit cryptographic padding (`ipad` / `opad`) and ensures clean internal state destruction.
-* **Strict RFC 2104 Compliance**: Properly handles cryptographic keys of arbitrary lengths:
-  * Keys shorter than the block size (64 bytes) are padded with zeros.
-  * Keys longer than the block size are automatically pre-hashed down to 32 bytes before processing.
-* **Stream-Ready Design**: Designed with standard `Init`, `Update`, and `Final` modular architectures to support chunk-based streaming of large files or network packets.
+### 🚀 Key Technical Highlights
 
-### 📦 API Reference
+* **Zero Dependencies**: Built entirely using native C types (`uint8`, `uint32`, `uint64`). No OpenSSL or external crypto runtimes required—ideal for embedded platforms, IoT MCUs, and bare-metal environments.
+* **Stream-Ready Design (Chunk-by-Chunk)**: Implements the industry-standard `Init`, `Update`, and `Final` architectural pattern. It buffers fragmented input and flushes a 512-bit message block via `sha256_Transform` only when filled, allowing you to process unbounded data streams or massive files with a constant memory footprint.
+* **Strict RFC 2104 Key Dimensioning**: 
+  * Automatically zero-pads keys shorter than the 64-byte block size.
+  * Dynamically down-hashes keys exceeding 64 bytes using a nested `sha256` instantiation, collapsing them to 32 bytes before pad masking.
+* **Cryptographic Diffusion**: Leverages precise Bitwise XOR masks (`0x36` for inner pad, `0x5C` for outer pad) to maximize the Hamming distance between keys, ensuring robust avalanche effects against message tampering.
+
+### 📦 Code Architecture & API
+
+The implementation is modularized into a streaming Hash engine and a top-level authentication API:
 
 ```c
-// Initializes the HMAC-SHA256 context with a secret key
-void hmac_sha256_init(hmac_sha256_ctx *ctx, const unsigned char *key, size_t key_len);
+// SHA-256 Core Streaming API
+void sha256_Init(sha256_CTX* ctx);
+void sha256_Update(sha256_CTX* ctx, const uint8* data, size_t len);
+void sha256_Final(sha256_CTX* ctx, uint8 digest[32]);
 
-// Feeds message data streamingly into the HMAC engine
-void hmac_sha256_update(hmac_sha256_ctx *ctx, const unsigned char *message, size_t message_len);
-
-// Finalizes the calculation and outputs the 32-byte (256-bit) MAC tag
-void hmac_sha256_final(hmac_sha256_ctx *ctx, unsigned char *mac);
+// One-Shot HMAC-SHA256 Wrapper
+void hmac_sha256(const uint8* key, size_t key_len, 
+                 const uint8* message, size_t message_len, 
+                 uint8* hmac_result);

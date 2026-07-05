@@ -2,7 +2,7 @@
 
 [![Language](https://img.shields.io/badge/Language-C-blue.svg)](https://en.wikipedia.org/wiki/C_(programming_language))
 [![Standard](https://img.shields.io/badge/Compliance-RFC_2104-orange.svg)](https://tools.ietf.org/html/rfc2104)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 
 [English](#english) | [中文说明](#中文说明)
 
